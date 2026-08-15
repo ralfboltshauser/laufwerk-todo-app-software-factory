@@ -14,6 +14,7 @@ export const auth = betterAuth({
   baseURL: {
     allowedHosts: [
       "localhost:*",
+      "127.0.0.1:*",
       "laufwerk-todo-app-software-factory.vercel.app",
       "laufwerk-todo-app-software-factory-*.vercel.app",
     ],

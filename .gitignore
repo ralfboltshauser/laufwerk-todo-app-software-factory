@@ -9,3 +9,4 @@
 *.tsbuildinfo
 laufwerk/bun.lock
 laufwerk/node_modules/
+/.vercel/
