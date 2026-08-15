@@ -55,6 +55,9 @@ test("the composer shows the todo title character limit at a 320px viewport", as
   await input.fill("x".repeat(120));
   await expect(counter).toHaveText("0 characters left");
   await expect(input).toHaveValue("x".repeat(120));
+  await input.press("x");
+  await expect(input).toHaveValue("x".repeat(120));
+  await expect(counter).toHaveText("0 characters left");
 
   const inputBox = await input.boundingBox();
   const buttonBox = await addButton.boundingBox();
