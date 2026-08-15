@@ -1,0 +1,19 @@
+{
+  "name": "laufwerk-consumer",
+  "private": true,
+  "type": "module",
+  "packageManager": "bun@1.3.14",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@effect/workflow": "0.19.1",
+    "@laufwerk/sandbox": "file:../../laufwerk/packages/sandbox",
+    "@laufwerk/sdk": "file:../../laufwerk/packages/sdk",
+    "effect": "3.22.1"
+  },
+  "devDependencies": {
+    "@types/bun": "1.3.14",
+    "typescript": "7.0.2"
+  }
+}
