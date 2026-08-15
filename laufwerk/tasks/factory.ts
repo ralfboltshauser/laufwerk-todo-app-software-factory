@@ -46,7 +46,7 @@ export const fetchIssue = (issueNumber: number) =>
 
 export const prepareWorktree = (issueNumber: number) =>
   activity("prepare-issue-worktree", Worktree, async () => {
-    const root = process.cwd();
+    const root = await repositoryRoot();
     const branch = `factory/issue-${issueNumber}`;
     const source = `.factory/worktrees/issue-${issueNumber}`;
     const destination = resolve(root, source);
@@ -83,7 +83,8 @@ export const publishChanges = (input: {
   readonly branch: string;
   readonly attempt: number;
 }) => activity(`publish-changes-${input.attempt}`, PullRequest, async () => {
-  const cwd = resolve(process.cwd(), input.source);
+  const cwd = resolve(await repositoryRoot(), input.source);
+  await capture(["git", "restore", "--worktree", "next-env.d.ts"], cwd);
   const files = await changedFiles(cwd);
   if (files.length === 0) throw new Error("The implementation produced no changes");
   const protectedFile = files.find((file) =>
@@ -275,6 +276,9 @@ const changedFiles = async (cwd: string): Promise<readonly string[]> => {
   ]);
   return [...new Set(`${tracked}\n${staged}\n${untracked}`.split("\n").filter(Boolean))];
 };
+
+const repositoryRoot = async () =>
+  (await capture(["git", "rev-parse", "--show-toplevel"], process.cwd())).trim();
 
 const activity = <A, I>(
   name: string,
