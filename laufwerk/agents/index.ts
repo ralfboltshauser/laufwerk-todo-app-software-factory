@@ -28,7 +28,7 @@ export const implementer = new HarnessAgent({
 
 export const verifier = new HarnessAgent({
   id: "issue-verifier",
-  harness: createClaudeCode({ maxTurns: 10 }),
+  harness: createClaudeCode({ maxTurns: 20 }),
   sandbox: sandboxes.claude,
   sandboxConfig: { workDir: "workspace" },
   instructions:
