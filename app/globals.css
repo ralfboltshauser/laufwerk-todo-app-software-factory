@@ -135,7 +135,15 @@ h1 {
   box-shadow: none;
 }
 
-.todo-composer .form-error { grid-column: 1 / -1; }
+.todo-composer .form-error,
+.todo-composer .character-limit { grid-column: 1 / -1; }
+
+.character-limit {
+  margin: -2px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.35;
+}
 
 .list-heading {
   display: flex;
