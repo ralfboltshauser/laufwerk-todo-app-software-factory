@@ -86,18 +86,19 @@ export const publishChanges = (input: {
   const cwd = resolve(await repositoryRoot(), input.source);
   await capture(["git", "restore", "--worktree", "next-env.d.ts"], cwd);
   const files = await changedFiles(cwd);
-  if (files.length === 0) throw new Error("The implementation produced no changes");
   const protectedFile = files.find((file) =>
     protectedPrefixes.some((prefix) => file === prefix || file.startsWith(prefix))
   );
   if (protectedFile) throw new Error(`Protected path changed: ${protectedFile}`);
 
-  await capture(["git", "add", "--all"], cwd);
-  const commitMessage = input.attempt === 1
-    ? `feat: resolve issue #${input.issue.number}`
-    : `fix: address review for issue #${input.issue.number}`;
-  await capture(["git", "commit", "-m", commitMessage], cwd);
-  await capture(["git", "push", "--set-upstream", "origin", input.branch], cwd);
+  if (files.length > 0) {
+    await capture(["git", "add", "--all"], cwd);
+    const commitMessage = input.attempt === 1
+      ? `feat: resolve issue #${input.issue.number}`
+      : `fix: address review for issue #${input.issue.number}`;
+    await capture(["git", "commit", "-m", commitMessage], cwd);
+    await capture(["git", "push", "--set-upstream", "origin", input.branch], cwd);
+  }
   const sha = (await capture(["git", "rev-parse", "HEAD"], cwd)).trim();
 
   const existing = JSON.parse(
@@ -117,6 +118,7 @@ export const publishChanges = (input: {
   ) as readonly { readonly number: number; readonly url: string }[];
   const found = existing[0];
   if (found) return { ...found, sha };
+  if (files.length === 0) throw new Error("The implementation produced no changes");
 
   const url = (await capture([
     "gh",
