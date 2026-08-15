@@ -32,7 +32,8 @@ export const verifier = new HarnessAgent({
   sandbox: sandboxes.claude,
   sandboxConfig: { workDir: "workspace" },
   instructions:
-    "Independently verify the implementation against the issue and approved plan. Report only concrete blockers; do not broaden scope or edit files.",
+    "Independently verify the implementation against the issue and approved plan. Use only Read, Glob, and Grep; Git metadata and Bash are intentionally unavailable. Report only concrete blockers; do not broaden scope or edit files.",
   skills: [repositorySkill],
+  activeTools: ["read", "glob", "grep"],
   permissionMode: "allow-reads",
 });

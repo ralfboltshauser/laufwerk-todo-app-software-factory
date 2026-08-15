@@ -149,7 +149,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
             `Implementer report: ${JSON.stringify(implementation)}`,
             `Preview URL: ${preview.url}`,
             `Browser verification exit ${browser.exitCode}:\n${browser.stdout}\n${browser.stderr}`,
-            "Inspect the repository diff. Approve only if the issue is satisfied without regressions.",
+            "Inspect the relevant repository files with Read, Glob, and Grep. Git metadata and Bash are intentionally unavailable. Approve only if the issue is satisfied without regressions.",
             'Return only JSON with this shape: {"approved":true,"summary":"string","blockers":["string"]}.',
           ].join("\n\n"),
           output: Verification,
