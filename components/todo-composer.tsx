@@ -1,14 +1,18 @@
 "use client";
 
 import { FormEvent, useState, useTransition } from "react";
-import { createTodo } from "@/app/actions";
+import type { TodoActionResult } from "@/app/actions";
 
 const TODO_TITLE_MAX_LENGTH = 120;
 const TODO_TITLE_LIMIT_VISIBLE_AT = 90;
 const TODO_TITLE_LIMIT_ID = "todo-title-limit";
 const TODO_ERROR_ID = "todo-error";
 
-export function TodoComposer() {
+export function TodoComposer({
+  onCreate,
+}: {
+  readonly onCreate: (title: string) => Promise<TodoActionResult>;
+}) {
   const [title, setTitle] = useState("");
   const [error, setError] = useState<string>();
   const [pending, startTransition] = useTransition();
@@ -23,7 +27,7 @@ export function TodoComposer() {
     event.preventDefault();
     setError(undefined);
     startTransition(async () => {
-      const result = await createTodo(title);
+      const result = await onCreate(title);
       if (result.ok) setTitle("");
       else setError(result.error);
     });

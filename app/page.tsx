@@ -2,8 +2,7 @@ import { desc, eq } from "drizzle-orm";
 import Link from "next/link";
 import { headers } from "next/headers";
 import { redirect } from "next/navigation";
-import { TodoComposer } from "@/components/todo-composer";
-import { TodoItem } from "@/components/todo-item";
+import { TodoList } from "@/components/todo-list";
 import { SignOutButton } from "@/components/sign-out-button";
 import { db } from "@/db/client";
 import { todo } from "@/db/schema";
@@ -30,14 +29,6 @@ export default async function Home({
     .from(todo)
     .where(eq(todo.userId, session.user.id))
     .orderBy(desc(todo.createdAt));
-  const visibleTodos = todos.filter((item) =>
-    filter === "all"
-      ? true
-      : filter === "completed"
-        ? item.completed
-        : !item.completed,
-  );
-  const remaining = todos.filter((item) => !item.completed).length;
 
   return (
     <main className="page-shell" id="main-content">
@@ -50,29 +41,7 @@ export default async function Home({
           <SignOutButton name={session.user.name} />
         </header>
 
-        <TodoComposer />
-
-        <div className="list-heading" aria-live="polite">
-          <p>{remaining === 1 ? "1 thing left" : `${remaining} things left`}</p>
-        </div>
-
-        {visibleTodos.length > 0 ? (
-          <ul className="todo-list">
-            {visibleTodos.map((item) => (
-              <TodoItem key={item.id} todo={item} />
-            ))}
-          </ul>
-        ) : (
-          <div className="empty-state">
-            <p>
-              {filter === "completed"
-                ? "Nothing completed yet."
-                : filter === "active"
-                  ? "Nothing left to do."
-                  : "Your list is clear. Add the first thing on your mind."}
-            </p>
-          </div>
-        )}
+        <TodoList todos={todos} filter={filter} />
 
         <nav className="filters" aria-label="Filter todos">
           {(["all", "active", "completed"] as const).map((value) => (

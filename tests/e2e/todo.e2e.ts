@@ -16,6 +16,35 @@ async function createAccount(page: Page) {
   await expect(page.getByRole("heading", { name: "Things to do" })).toBeVisible();
 }
 
+async function delayTodoCreation(page: Page, title: string) {
+  let releaseCreate = () => {};
+  let resolveRequestStarted = () => {};
+  let hasDelayedRequest = false;
+  const release = new Promise<void>((resolve) => {
+    releaseCreate = resolve;
+  });
+  const requestStarted = new Promise<void>((resolve) => {
+    resolveRequestStarted = resolve;
+  });
+  await page.route("**/*", async (route, request) => {
+    if (
+      !hasDelayedRequest &&
+      request.method() === "POST" &&
+      request.postData()?.includes(title)
+    ) {
+      hasDelayedRequest = true;
+      resolveRequestStarted();
+      await release;
+    }
+    await route.continue();
+  });
+
+  return {
+    requestStarted,
+    release: () => releaseCreate(),
+  };
+}
+
 test("a user can manage todos from a mobile viewport", async ({ page }) => {
   await createAccount(page);
   await page.getByLabel("New todo").fill("Verify the preview");
@@ -29,6 +58,28 @@ test("a user can manage todos from a mobile viewport", async ({ page }) => {
   await expect(page.getByText("Nothing left to do.")).toBeVisible();
   await page.getByRole("link", { name: "Completed" }).click();
   await expect(page.getByText("Verify the preview")).toBeVisible();
+});
+
+test("todo creation appears optimistically while the server action is pending", async ({ page }) => {
+  await createAccount(page);
+  const title = "Ship optimistic creation";
+  const createDelay = await delayTodoCreation(page, title);
+
+  await page.getByLabel("New todo").fill(title);
+  await page.getByRole("button", { name: "Add" }).click();
+  await createDelay.requestStarted;
+
+  const optimisticTodo = page.getByRole("listitem").filter({ hasText: title });
+  await expect(optimisticTodo).toBeVisible();
+  await expect(optimisticTodo).toHaveAttribute("data-pending", "true");
+  await expect(optimisticTodo.getByRole("checkbox")).toBeDisabled();
+  await expect(
+    optimisticTodo.getByRole("button", { name: `Delete ${title}` }),
+  ).toBeDisabled();
+  await expect(page.getByText("1 thing left")).toBeVisible();
+
+  createDelay.release();
+  await expect(optimisticTodo).toHaveAttribute("data-pending", "false");
 });
 
 test("the composer shows the todo title character limit at a 320px viewport", async ({ page }) => {
