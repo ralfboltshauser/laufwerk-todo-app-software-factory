@@ -101,6 +101,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
         });
         if (local.exitCode !== 0) {
           if (attempt === 2) {
+            yield* session.close().pipe(Effect.ignore);
             return yield* Effect.fail(`Local checks failed twice:\n${local.stderr || local.stdout}`);
           }
           implementation = yield* session.ask({
@@ -119,6 +120,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
           command: "rm -rf -- node_modules .next test-results playwright-report",
         });
         if (cleanup.exitCode !== 0) {
+          yield* session.close().pipe(Effect.ignore);
           return yield* Effect.fail(`Could not clean generated files before write-back: ${cleanup.stderr}`);
         }
         yield* Workspace.writeBack({ workspace });
@@ -157,6 +159,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
 
         if (browser.exitCode === 0 && verification.approved) break;
         if (attempt === 2) {
+          yield* session.close().pipe(Effect.ignore);
           return yield* Effect.fail(
             `Preview verification failed twice: ${verification.summary}\n${verification.blockers.join("\n")}`,
           );
@@ -174,6 +177,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
       }
 
       if (!published || !preview || !verification?.approved) {
+        yield* session.close().pipe(Effect.ignore);
         return yield* Effect.fail("The implementation never reached an approved preview");
       }
 
@@ -183,6 +187,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
         description: `${verification.summary}\n\nPreview: ${preview.url}\nPR: ${published.url}`,
       });
       if (!mergeApproved) {
+        yield* session.close().pipe(Effect.ignore);
         return {
           status: "ready-for-merge" as const,
           issueNumber,
@@ -208,6 +213,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
           title: "Merged, but production verification failed",
           description: productionSmoke.stderr || productionSmoke.stdout,
         });
+        yield* session.close().pipe(Effect.ignore);
         return {
           status: "merged-verification-failed" as const,
           issueNumber,
@@ -227,6 +233,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
         title: `Issue #${issueNumber} shipped`,
         description: `${implementation.summary}\n\n${production.url}`,
       });
+      yield* session.close().pipe(Effect.ignore);
       return {
         status: "merged" as const,
         issueNumber,
@@ -234,7 +241,7 @@ export const layer = workflow.toLayer(({ issueNumber }) =>
         deploymentUrl: production.url,
         summary: implementation.summary,
       };
-    }).pipe(Effect.ensuring(session.close().pipe(Effect.ignore)));
+    });
   }).pipe(Effect.mapError(errorMessage)),
 );
 
