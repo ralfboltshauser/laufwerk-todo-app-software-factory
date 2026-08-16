@@ -4,10 +4,18 @@ import { useTransition } from "react";
 import { deleteTodo, setTodoCompleted } from "@/app/actions";
 import type { Todo } from "@/db/schema";
 
-export function TodoItem({ todo }: { readonly todo: Todo }) {
-  const [pending, startTransition] = useTransition();
+export function TodoItem({
+  todo,
+  optimistic = false,
+}: {
+  readonly todo: Todo;
+  readonly optimistic?: boolean;
+}) {
+  const [transitionPending, startTransition] = useTransition();
+  const pending = transitionPending || optimistic;
 
   const remove = () => {
+    if (pending) return;
     if (!window.confirm(`Delete “${todo.title}”?`)) return;
     startTransition(() => deleteTodo(todo.id));
   };
@@ -20,6 +28,7 @@ export function TodoItem({ todo }: { readonly todo: Todo }) {
           checked={todo.completed}
           disabled={pending}
           onChange={(event) => {
+            if (pending) return;
             const completed = event.currentTarget.checked;
             startTransition(() => setTodoCompleted(todo.id, completed));
           }}
